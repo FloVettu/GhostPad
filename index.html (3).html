@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>https//:GhostPad.com/jeux compatibles</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #0f0f10;
+      color: #fff;
+    }
+
+    header {
+      text-align: center;
+      padding: 2rem 1rem;
+      background-color: #1a1a1d;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.5rem;
+      color: #00ffcc;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .game-card {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      background-size: cover;
+      background-position: center;
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .game-card:hover {
+      transform: scale(1.03);
+    }
+
+    .game-card::after {
+      content: attr(data-title);
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      font-weight: bold;
+      text-align: center;
+      font-size: 1.2rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem;
+      background-color: #1a1a1d;
+      color: #aaa;
+      font-size: 0.9rem;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Jeux compatibles avec GhostPad</h1>
+  </header>
+
+  <div class="grid-container">
+
+    <!-- Elden Ring -->
+    <a href="file:///E:/Projet%20Start%20up/Forums%20des%20avis/Forum-GhostPad.html">
+      <div class="game-card" data-title="Elden Ring" style="background-image: url('https://upload.wikimedia.org/wikipedia/en/b/b9/Elden_Ring_Box_art.jpg');"></div>
+    </a>
+
+    <!-- Minecraft -->
+	<a href="minecraft.html">
+		<div class="game-card" data-title="Minecraft" style="background-image: url('images/minecraft.jpg');"></div>
+	</a>
+	
+    <!-- Hogwarts Legacy -->
+	<a href="hogwarts-legacy.html">
+	<div class="game-card" data-title="Hogwarts Legacy"
+       style="background-image: url('file:///D:/Fichiers%20photos/Hogwarts-Legacy.jfif');">
+	</div>
+	</a>
+	
+	<!-- Final-Fantasy-VII-Rebirth -->
+	<a href="file:///E:/Projet%20Start%20up/Forums%20des%20avis/Questions-R%C3%A9ponses-Final%20Fantasy%20VII%20Rebirth.html">
+	<div class="game-card" data-title="Final-Fantasy-VII-Rebirth"
+       style="background-image: url('file:///D:/Fichiers%20photos/Final-Fantasy-VII-Rebirth.png');">
+	</div>
+	</a>
+	
+		<!-- Spider-Man 2 -->
+	<a href="spiderman-2.html">
+	<div class="game-card" data-title="Spider-Man 2"
+       style="background-image: url('file:///D:/Fichiers%20photos/spider-man-2.avif');">
+	</div>
+	</a>
+
+  <footer>
+    © 2025 GhostPad — Tous droits réservés.
+  </footer>
+
+</body>
+</html>

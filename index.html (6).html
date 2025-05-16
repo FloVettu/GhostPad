@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Questions-Réponses - Final Fantasy VII Rebirth</title>
+  <style>
+    body {
+      background: url('https://images2.alphacoders.com/134/thumb-1920-1349899.png') no-repeat center center fixed;
+      background-size: cover;
+      font-family: 'Orbitron', sans-serif;
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      text-align: center;
+      color: #ffcc00;
+      margin-top: 50px;
+      text-shadow: 0 0 10px #000;
+    }
+    .forum-container {
+      max-width: 800px;
+      margin: auto;
+      background-color: rgba(0, 0, 0, 0.75);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 30px #000;
+      border: 1px solid #444;
+    }
+    textarea {
+      width: 100%;
+      background-color: #2a2a2a;
+      color: white;
+      border: 1px solid #444;
+      padding: 10px;
+      border-radius: 6px;
+      resize: vertical;
+    }
+    .btn {
+      background-color: #ffcc00;
+      color: black;
+      border: none;
+      padding: 10px 20px;
+      margin-top: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .comment {
+      background-color: rgba(255,255,255,0.05);
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 10px;
+      position: relative;
+      border-left: 3px solid #ffcc00;
+    }
+    .username {
+      color: #ffcc00;
+      font-weight: bold;
+    }
+    .reply {
+      margin-top: 10px;
+      margin-left: 20px;
+      background-color: rgba(255,255,255,0.03);
+      padding: 10px;
+      border-left: 2px solid #ffcc00;
+      border-radius: 6px;
+    }
+    .reply-btn {
+      margin-top: 5px;
+      margin-right: 5px;
+      background: transparent;
+      color: #ffcc00;
+      border: 1px solid #ffcc00;
+      border-radius: 6px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .reply-btn:hover {
+      background-color: #ffcc00;
+      color: black;
+    }
+    .meta {
+      font-size: 0.75rem;
+      color: #bbb;
+      margin-top: 4px;
+    }
+    #user-info {
+      text-align: center;
+      margin: 20px;
+    }
+    button {
+      background-color: #ff3366;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>💬 Questions-Réponses - Final Fantasy VII Rebirth
+    <button onclick="window.location.href='Jeux Compatibles avec GhostPad.html'">Jeux Compatibles</button>
+  </h1>
+  <div id="user-info"></div>
+  <div class="forum-container">
+    <textarea id="mainQuestion" placeholder="Pose ta question..."></textarea>
+    <button class="btn" onclick="addQuestion()">Poster</button>
+    <div id="comments"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, getDocs, query, orderBy,
+      serverTimestamp, deleteDoc, doc, updateDoc, setDoc, getDoc
+    } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import {
+      getAuth, GoogleAuthProvider, signInWithPopup,
+      onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJlGbSO2KS-oZWKuh0G7lq7TGRELxd5JM",
+      authDomain: "ghostpad-6b15a.firebaseapp.com",
+      projectId: "ghostpad-6b15a",
+      storageBucket: "ghostpad-6b15a.appspot.com",
+      messagingSenderId: "182643660207",
+      appId: "1:182643660207:web:d1fa8c219189c9cfc1cb5a",
+      measurementId: "G-QBDXQ6WZGY"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+    let currentUser = null;
+
+    onAuthStateChanged(auth, (user) => {
+      const userInfo = document.getElementById("user-info");
+      if (user) {
+        currentUser = user;
+        userInfo.innerHTML = `
+          Connecté en tant que <strong>${user.displayName}</strong> (${user.email})
+          <button onclick="logout()">Se déconnecter</button>
+        `;
+        loadMessages();
+      } else {
+        currentUser = null;
+        userInfo.innerHTML = `<button onclick="login()">Se connecter avec Google</button>`;
+        document.getElementById("comments").innerHTML = "";
+      }
+    });
+
+    window.login = () => signInWithPopup(auth, provider);
+    window.logout = () => signOut(auth);
+
+    window.addQuestion = async () => {
+      const text = document.getElementById("mainQuestion").value.trim();
+      if (!currentUser) {
+        alert("Veuillez vous connecter avec Google pour poster un message.");
+        login();
+        return;
+      }
+      if (text === "") return;
+
+      await addDoc(collection(db, "forum"), {
+        user: currentUser.displayName || currentUser.email,
+        text: text,
+        timestamp: serverTimestamp(),
+        parentId: null
+      });
+      document.getElementById("mainQuestion").value = "";
+      loadMessages();
+    };
+
+    window.postReply = async (button, parentId) => {
+      const form = button.parentElement;
+      const text = form.querySelector("textarea").value.trim();
+      if (!currentUser) {
+        alert("Veuillez vous connecter avec Google pour répondre.");
+        login();
+        return;
+      }
+      if (text === "") return;
+
+      await addDoc(collection(db, "forum"), {
+        user: currentUser.displayName || currentUser.email,
+        text: text,
+        timestamp: serverTimestamp(),
+        parentId: parentId
+      });
+
+      form.remove();
+      loadMessages();
+    };
+
+    window.showReplyForm = (button, parentId) => {
+      const parent = button.parentElement;
+      if (parent.querySelector(".reply-form")) return;
+
+      const form = document.createElement("div");
+      form.className = "reply-form";
+      form.innerHTML = `
+        <textarea placeholder="Votre réponse..."></textarea>
+        <button class="btn" onclick="postReply(this, '${parentId}')">Envoyer</button>
+      `;
+      parent.appendChild(form);
+    };
+
+    window.deleteMessage = async (id) => {
+      if (confirm("Supprimer ce message ?")) {
+        await deleteDoc(doc(db, "forum", id));
+        loadMessages();
+      }
+    };
+
+    window.editMessage = (button, id, oldText) => {
+      const parent = button.parentElement;
+      parent.innerHTML = `
+        <textarea>${oldText}</textarea>
+        <button class="btn" onclick="saveEdit('${id}', this)">Sauvegarder</button>
+      `;
+    };
+
+    window.saveEdit = async (id, button) => {
+      const text = button.parentElement.querySelector("textarea").value.trim();
+      if (text) {
+        await updateDoc(doc(db, "forum", id), {
+          text: text,
+          timestamp: serverTimestamp()
+        });
+        loadMessages();
+      }
+    };
+
+    window.toggleLike = async (messageId) => {
+      if (!currentUser) {
+        alert("Connecte-toi pour aimer ce message.");
+        login();
+        return;
+      }
+      const likeRef = doc(db, `forum/${messageId}/likes/${currentUser.uid}`);
+      const docSnap = await getDoc(likeRef);
+
+      if (docSnap.exists()) {
+        await deleteDoc(likeRef);
+      } else {
+        await setDoc(likeRef, {
+          user: currentUser.displayName,
+          timestamp: serverTimestamp()
+        });
+      }
+      loadMessages();
+    };
+
+    async function loadMessages() {
+      const q = query(collection(db, "forum"), orderBy("timestamp", "desc"));
+      const querySnapshot = await getDocs(q);
+
+      const rawMessages = [];
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        rawMessages.push({ id: docSnap.id, ...data });
+      });
+
+      const questions = rawMessages.filter(m => !m.parentId);
+      const replies = rawMessages.filter(m => m.parentId);
+
+      const questionsWithLikes = await Promise.all(questions.map(async (q) => {
+        const likesSnap = await getDocs(collection(db, `forum/${q.id}/likes`));
+        return {
+          ...q,
+          id: q.id,
+          likeCount: likesSnap.size,
+          hasLiked: currentUser && likesSnap.docs.some(doc => doc.id === currentUser.uid)
+        };
+      }));
+
+      questionsWithLikes.sort((a, b) => b.likeCount - a.likeCount);
+
+      const commentsContainer = document.getElementById("comments");
+      commentsContainer.innerHTML = "";
+
+      for (const question of questionsWithLikes) {
+        const comment = document.createElement("div");
+        comment.className = "comment";
+        const likeCount = question.likeCount;
+        const hasLiked = question.hasLiked;
+
+        comment.innerHTML = `
+          <span class="username">👤 ${question.user}</span>
+          <p>${question.text}</p>
+          <div class="meta">
+            ${formatDate(question.timestamp?.toDate())} — 
+            ❤️ ${likeCount}
+            ${currentUser ? `<button class="reply-btn" onclick="toggleLike('${question.id}')">${hasLiked ? "Retirer ❤️" : "Like ❤️"}</button>` : ""}
+          </div>
+          ${currentUser?.displayName === question.user ? `
+            <button class="reply-btn" onclick="editMessage(this, '${question.id}', \`${question.text}\`)">✏️ Modifier</button>
+            <button class="reply-btn" onclick="deleteMessage('${question.id}')">🗑️ Supprimer</button>
+          ` : ""}
+          ${currentUser ? `<button class="reply-btn" onclick="showReplyForm(this, '${question.id}')">↩️ Répondre</button>` : ""}
+        `;
+
+        const nested = document.createElement("div");
+        nested.className = "replies";
+
+        for (const reply of replies.filter(r => r.parentId === question.id)) {
+          const replyDiv = document.createElement("div");
+          replyDiv.className = "reply";
+
+          const replyLikes = await getDocs(collection(db, `forum/${reply.id}/likes`));
+          const replyLikeCount = replyLikes.size;
+          const replyHasLiked = currentUser && replyLikes.docs.some(doc => doc.id === currentUser.uid);
+
+          replyDiv.innerHTML = `
+            <span class="username">↪ ${reply.user}</span>
+            <p>${reply.text}</p>
+            <div class="meta">
+              ${formatDate(reply.timestamp?.toDate())} — 
+              ❤️ ${replyLikeCount}
+              ${currentUser ? `<button class="reply-btn" onclick="toggleLike('${reply.id}')">${replyHasLiked ? "Retirer ❤️" : "Like ❤️"}</button>` : ""}
+            </div>
+            ${currentUser?.displayName === reply.user ? `
+              <button class="reply-btn" onclick="editMessage(this, '${reply.id}', \`${reply.text}\`)">✏️ Modifier</button>
+              <button class="reply-btn" onclick="deleteMessage('${reply.id}')">🗑️ Supprimer</button>
+            ` : ""}
+          `;
+          nested.appendChild(replyDiv);
+        }
+
+        comment.appendChild(nested);
+        commentsContainer.appendChild(comment);
+      }
+    }
+
+    function formatDate(date) {
+      if (!date) return "";
+      return new Intl.DateTimeFormat("fr-FR", {
+        dateStyle: "medium",
+        timeStyle: "short"
+      }).format(date);
+    }
+  </script>
+</body>
+</html>
